@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/scrypt"
 	"io"
 	"io/ioutil"
-	"log"
 	mrand "math/rand"
 	"net/http"
 	"net/url"
@@ -120,17 +119,17 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 		p.OS = runtime.GOOS
 	}
 
-	// If we're given a SignatureFile, then attempt to read that.
+	// If we're not given a Signature, then attempt to read one.
 	signature := p.Signature
-	if p.Signature == "" && p.SignatureFile != "" {
+	if p.Signature == "" {
 		var err error
-		signature, err = getSystemUUID()
-		if err != nil {
-			log.Printf("Error: %v", err)
+		if p.SignatureFile == "" {
+			signature, err = getSystemUUID()
+		} else {
 			signature, err = checkSignature(p.SignatureFile)
-			if err != nil {
-				return nil, err
-			}
+		}
+		if err != nil {
+			return nil, err
 		}
 	}
 

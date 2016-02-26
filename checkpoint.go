@@ -152,6 +152,7 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 	req.Header.Add("User-Agent", "HashiCorp/go-checkpoint")
 
 	client := cleanhttp.DefaultClient()
+	defer client.Transport.(*http.Transport).CloseIdleConnections()
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -161,6 +162,7 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 	}
 
 	var r io.Reader = resp.Body
+	defer resp.Body.Close()
 	if p.CacheFile != "" {
 		// Make sure the directory holding our cache exists.
 		if err := os.MkdirAll(filepath.Dir(p.CacheFile), 0755); err != nil {

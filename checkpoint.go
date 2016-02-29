@@ -3,7 +3,6 @@
 package checkpoint
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
@@ -294,7 +293,7 @@ func checkResult(r io.Reader) (*CheckResponse, error) {
 }
 
 // getSystemUUID returns the base64 encoded, scrypt hashed contents of
-// /sys/class/dmi/id/product_uuid (with some salt)
+// /sys/class/dmi/id/product_uuid.
 func getSystemUUID() (string, error) {
 	uuid, err := ioutil.ReadFile("/sys/class/dmi/id/product_uuid")
 	if err != nil {
@@ -307,15 +306,7 @@ func getSystemUUID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	output := bytes.Buffer{}
-	encoder := base64.NewEncoder(base64.StdEncoding, &output)
-	if _, err := encoder.Write(hash); err != nil {
-		return "", err
-	}
-	if err := encoder.Close(); err != nil {
-		return "", err
-	}
-	return output.String(), nil
+	return base64.StdEncoding.EncodeToString(hash), nil
 }
 
 func checkSignature(path string) (string, error) {

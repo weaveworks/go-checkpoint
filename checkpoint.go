@@ -118,18 +118,19 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 		p.OS = runtime.GOOS
 	}
 
-	// If we're not given a Signature, then attempt to read one.
-	signature := p.Signature
-	if p.Signature == "" {
-		var err error
-		if p.SignatureFile == "" {
-			signature, err = getSystemUUID()
-		} else {
-			signature, err = checkSignature(p.SignatureFile)
-		}
-		if err != nil {
-			return nil, err
-		}
+	// If we're not given a Signature, then attempt to read one from a
+	// file, if specified, or derive it from the system uuid.
+	//
+	// NB: We ignore errors here since it is better to perform the
+	// check with an empty signature than not at all.
+	var signature string
+	switch {
+	case p.Signature != "":
+		signature = p.Signature
+	case p.SignatureFile != "":
+		signature, _ = checkSignature(p.SignatureFile)
+	default:
+		signature, _ = getSystemUUID()
 	}
 
 	v := u.Query()

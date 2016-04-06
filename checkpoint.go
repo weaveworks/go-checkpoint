@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-cleanhttp"
@@ -95,9 +96,16 @@ type CheckAlert struct {
 	Level   string
 }
 
+// Checker is a state of a checker.
+type Checker struct {
+	doneCh          chan struct{}
+	nextCheckAt     time.Time
+	nextCheckAtLock sync.RWMutex
+}
+
 // Check checks for alerts and new version information.
 func Check(p *CheckParams) (*CheckResponse, error) {
-	if disabled := os.Getenv("CHECKPOINT_DISABLE"); disabled != "" && !p.Force {
+	if IsCheckDisabled() && !p.Force {
 		return &CheckResponse{}, nil
 	}
 
@@ -193,27 +201,53 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 // CheckInterval is used to check for a response on a given interval duration.
 // The interval is not exact, and checks are randomized to prevent a thundering
 // herd. However, it is expected that on average one check is performed per
-// interval. The returned channel may be closed to stop background checks.
-func CheckInterval(p *CheckParams, interval time.Duration, cb func(*CheckResponse, error)) chan struct{} {
-	doneCh := make(chan struct{})
+// interval.
+func CheckInterval(p *CheckParams, interval time.Duration,
+	cb func(*CheckResponse, error)) *Checker {
 
-	if disabled := os.Getenv("CHECKPOINT_DISABLE"); disabled != "" {
-		return doneCh
+	state := &Checker{
+		doneCh: make(chan struct{}),
+	}
+
+	if IsCheckDisabled() {
+		return state
 	}
 
 	go func() {
 		for {
+			after := randomStagger(interval)
+			state.nextCheckAtLock.Lock()
+			state.nextCheckAt = time.Now().Add(after)
+			state.nextCheckAtLock.Unlock()
+
 			select {
-			case <-time.After(randomStagger(interval)):
+			case <-time.After(after):
 				resp, err := Check(p)
 				cb(resp, err)
-			case <-doneCh:
+			case <-state.doneCh:
 				return
 			}
 		}
 	}()
 
-	return doneCh
+	return state
+}
+
+// NextCheckAt returns at what time next check will happen.
+func (c *Checker) NextCheckAt() time.Time {
+	c.nextCheckAtLock.RLock()
+	defer c.nextCheckAtLock.RUnlock()
+	return c.nextCheckAt
+}
+
+// Stop stops the checker.
+func (c *Checker) Stop() {
+	close(c.doneCh)
+}
+
+// IsCheckDisabled returns true if checks are disabled.
+func IsCheckDisabled() bool {
+	return os.Getenv("CHECKPOINT_DISABLE") != ""
 }
 
 // randomStagger returns an interval that is between 3/4 and 5/4 of

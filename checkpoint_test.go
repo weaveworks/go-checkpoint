@@ -154,8 +154,8 @@ func TestCheckInterval(t *testing.T) {
 		}
 	}
 
-	doneCh := CheckInterval(params, 500*time.Millisecond, checkFn)
-	defer close(doneCh)
+	st := CheckInterval(params, 500*time.Millisecond, checkFn)
+	defer st.Stop()
 
 	select {
 	case <-calledCh:
@@ -178,8 +178,8 @@ func TestCheckInterval_disabled(t *testing.T) {
 		defer close(calledCh)
 	}
 
-	doneCh := CheckInterval(params, 500*time.Millisecond, checkFn)
-	defer close(doneCh)
+	st := CheckInterval(params, 500*time.Millisecond, checkFn)
+	defer st.Stop()
 
 	select {
 	case <-calledCh:

@@ -202,6 +202,8 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 // The interval is not exact, and checks are randomized to prevent a thundering
 // herd. However, it is expected that on average one check is performed per
 // interval.
+// The first check happens immediately after a goroutine which is responsible for
+// making checks has been started.
 func CheckInterval(p *CheckParams, interval time.Duration,
 	cb func(*CheckResponse, error)) *Checker {
 
@@ -214,6 +216,8 @@ func CheckInterval(p *CheckParams, interval time.Duration,
 	}
 
 	go func() {
+		cb(Check(p))
+
 		for {
 			after := randomStagger(interval)
 			state.nextCheckAtLock.Lock()
@@ -222,8 +226,7 @@ func CheckInterval(p *CheckParams, interval time.Duration,
 
 			select {
 			case <-time.After(after):
-				resp, err := Check(p)
-				cb(resp, err)
+				cb(Check(p))
 			case <-state.doneCh:
 				return
 			}

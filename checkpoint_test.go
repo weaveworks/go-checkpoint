@@ -184,6 +184,44 @@ func TestCheckInterval_disabled(t *testing.T) {
 	}
 }
 
+func TestCheckInterval_immediate(t *testing.T) {
+	expected := &CheckResponse{
+		CurrentVersion:      "1.0.0",
+		CurrentReleaseDate:  1460459932, // 2016-04-12 11:18:52
+		CurrentDownloadURL:  "https://test-app.used-for-testing",
+		CurrentChangelogURL: "https://test-app.used-for-testing",
+		ProjectWebsite:      "https://test-app.used-for-testing",
+		Outdated:            false,
+		Alerts:              nil,
+	}
+
+	params := &CheckParams{
+		Product: "test-app",
+		Version: "1.0.0",
+	}
+
+	calledCh := make(chan struct{})
+	checkFn := func(actual *CheckResponse, err error) {
+		defer close(calledCh)
+		if err != nil {
+			t.Fatalf("err: %s", err)
+		}
+
+		if !reflect.DeepEqual(actual, expected) {
+			t.Fatalf("bad: %#v", actual)
+		}
+	}
+
+	st := CheckInterval(params, 500*time.Second, checkFn)
+	defer st.Stop()
+
+	select {
+	case <-calledCh:
+	case <-time.After(time.Second):
+		t.Fatalf("timeout")
+	}
+}
+
 func TestRandomStagger(t *testing.T) {
 	intv := 24 * time.Hour
 	min := 18 * time.Hour

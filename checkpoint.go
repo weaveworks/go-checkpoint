@@ -1,5 +1,5 @@
-// checkpoint is a package for checking version information and alerts
-// for a HashiCorp product.
+// Package checkpoint is a package for checking version information and alerts
+// for a Weaveworks product.
 package checkpoint
 
 import (
@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/go-cleanhttp"
 )
 
-var magicBytes [4]byte = [4]byte{0x35, 0x77, 0x69, 0xFB}
+var magicBytes = [4]byte{0x35, 0x77, 0x69, 0xFB}
 
 // CheckParams are the parameters for configuring a check request.
 type CheckParams struct {
@@ -406,7 +406,7 @@ func writeCacheHeader(f io.Writer, v string) error {
 	}
 
 	// Write out our current version length
-	var length uint32 = uint32(len(v))
+	var length = uint32(len(v))
 	if err := binary.Write(f, binary.LittleEndian, length); err != nil {
 		return err
 	}

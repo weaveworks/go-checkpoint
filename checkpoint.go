@@ -35,6 +35,9 @@ type CheckParams struct {
 	Product string
 	Version string
 
+	// Generic product flags
+	Flags map[string]string
+
 	// Arch and OS are used to filter alerts potentially only to things
 	// affecting a specific os/arch combination. If these aren't specified,
 	// they'll be automatically filled in.
@@ -146,6 +149,9 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 	v.Set("arch", p.Arch)
 	v.Set("os", p.OS)
 	v.Set("signature", signature)
+	for flag, value := range p.Flags {
+		v.Set("flag_"+flag, value)
+	}
 
 	u.Scheme = "https"
 	u.Host = "checkpoint-api.weave.works"

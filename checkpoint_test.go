@@ -34,6 +34,35 @@ func TestCheck(t *testing.T) {
 	}
 }
 
+func TestCheck_flags(t *testing.T) {
+	expected := &CheckResponse{
+		CurrentVersion:      "1.0.0",
+		CurrentReleaseDate:  1460459932, // 2016-04-12 11:18:52
+		CurrentDownloadURL:  "https://test-app.used-for-testing",
+		CurrentChangelogURL: "https://test-app.used-for-testing",
+		ProjectWebsite:      "https://test-app.used-for-testing",
+		Outdated:            false,
+		Alerts:              nil,
+	}
+
+	actual, err := Check(&CheckParams{
+		Product: "test-app",
+		Version: "1.0.0",
+		Flags: map[string]string{
+			"flag1": "value1",
+			"flag2": "value2",
+		},
+	})
+
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("bad: %#v", actual)
+	}
+}
+
 func TestCheck_disabled(t *testing.T) {
 	os.Setenv("CHECKPOINT_DISABLE", "1")
 	defer os.Setenv("CHECKPOINT_DISABLE", "")

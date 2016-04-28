@@ -30,7 +30,7 @@ test:
 	go test
 
 lint:
-	./tools/lint .
+	./tools/lint -notestpackage .
 	
 endif
 

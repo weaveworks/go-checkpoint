@@ -1,0 +1,9 @@
+machine:
+  services:
+    - docker
+
+test:
+  override:
+    - make RM= lint
+    - make 
+    - make test

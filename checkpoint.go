@@ -36,7 +36,7 @@ type CheckParams struct {
 	Version string
 
 	// Generic product flags
-	Flags map[string]string
+	Flags []Flag
 
 	// Arch and OS are used to filter alerts potentially only to things
 	// affecting a specific os/arch combination. If these aren't specified,
@@ -106,6 +106,12 @@ type Checker struct {
 	nextCheckAtLock sync.RWMutex
 }
 
+// Flag is an attribute of a product.
+type Flag struct {
+	Key   string
+	Value string
+}
+
 // Check checks for alerts and new version information.
 func Check(p *CheckParams) (*CheckResponse, error) {
 	if IsCheckDisabled() && !p.Force {
@@ -149,8 +155,8 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 	v.Set("arch", p.Arch)
 	v.Set("os", p.OS)
 	v.Set("signature", signature)
-	for flag, value := range p.Flags {
-		v.Set("flag_"+flag, value)
+	for _, flag := range p.Flags {
+		v.Set("flag_"+flag.Key, flag.Value)
 	}
 
 	u.Scheme = "https"

@@ -48,9 +48,9 @@ func TestCheck_flags(t *testing.T) {
 	actual, err := Check(&CheckParams{
 		Product: "test-app",
 		Version: "1.0.0",
-		Flags: map[string]string{
-			"flag1": "value1",
-			"flag2": "value2",
+		Flags: []Flag{
+			{"flag1", "value1"},
+			{"flag2", "value2"},
 		},
 	})
 

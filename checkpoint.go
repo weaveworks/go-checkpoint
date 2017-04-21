@@ -57,6 +57,10 @@ type CheckParams struct {
 	Signature     string
 	SignatureFile string
 
+	// Location where host machine ID files can be found, e.g. if
+	// volume-mounted inside a container
+	HostRoot string
+
 	// CacheFile, if specified, will cache the result of a check. The
 	// duration of the cache is specified by CacheDuration, and defaults
 	// to 48 hours if not specified. If the CacheFile is newer than the
@@ -141,7 +145,7 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 	case p.SignatureFile != "":
 		signature, _ = checkSignature(p.SignatureFile)
 	default:
-		signature, _ = getSystemUUID()
+		signature, _ = getSystemUUID(p.HostRoot)
 	}
 
 	v := u.Query()
@@ -338,18 +342,27 @@ func checkResult(r io.Reader) (*CheckResponse, error) {
 
 // getSystemUUID returns the base64 encoded, scrypt hashed contents of
 // /sys/class/dmi/id/product_uuid, or, if that is not available,
-// sys/hypervisor/uuid.
-func getSystemUUID() (string, error) {
+// sys/hypervisor/uuid, concatenated with /etc/machine-id or /var/lib/dbus/machine-id
+// The parameter hostRoot allows for files to be mounted under a different root
+func getSystemUUID(hostRoot string) (string, error) {
 	uuid, err := ioutil.ReadFile("/sys/class/dmi/id/product_uuid")
 	if os.IsNotExist(err) {
 		uuid, err = ioutil.ReadFile("/sys/hypervisor/uuid")
 	}
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		return "", err
 	}
-	if len(uuid) <= 0 {
-		return "", fmt.Errorf("Empty system uuid")
+	machineid, err := ioutil.ReadFile(hostRoot + "/etc/machine-id")
+	if os.IsNotExist(err) {
+		machineid, err = ioutil.ReadFile(hostRoot + "/var/lib/dbus/machine-id")
 	}
+	if err != nil && !os.IsNotExist(err) {
+		return "", err
+	}
+	if len(uuid) == 0 && len(machineid) == 0 {
+		return "", fmt.Errorf("All system IDs are blank")
+	}
+	uuid = append(machineid, uuid...)
 	hash, err := scrypt.Key(uuid, uuid, 16384, 8, 1, 32)
 	if err != nil {
 		return "", err

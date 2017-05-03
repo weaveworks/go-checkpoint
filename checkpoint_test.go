@@ -52,6 +52,12 @@ func TestCheck_flags(t *testing.T) {
 			"flag1": "value1",
 			"flag2": "value2",
 		},
+		ExtraFlags: func() []Flag {
+			return []Flag{
+				{"flag3", "value3a"},
+				{"flag3", "value3b"},
+			}
+		},
 	})
 
 	if err != nil {

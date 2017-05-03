@@ -1,8 +1,8 @@
-FROM golang:1.6.2
+FROM golang:1.8.1
 RUN apt-get update && \
 	apt-get install -y python-requests time file sudo && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN go get -tags netgo \
+RUN go get \
 		github.com/fzipp/gocyclo \
 		github.com/golang/lint/golint \
 		github.com/kisielk/errcheck \

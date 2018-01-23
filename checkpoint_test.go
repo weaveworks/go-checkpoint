@@ -1,13 +1,50 @@
 package checkpoint
 
 import (
+	"encoding/json"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
 )
+
+var srv *httptest.Server
+
+type TestHttpHandler struct{}
+
+func TestMain(m *testing.M) {
+	setup()
+	retCode := m.Run()
+	teardown()
+	os.Exit(retCode)
+}
+
+func setup() {
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := &CheckResponse{
+			CurrentVersion:      "1.0.0",
+			CurrentReleaseDate:  1460459932, // 2016-04-12 11:18:52
+			CurrentDownloadURL:  "https://test-app.used-for-testing",
+			CurrentChangelogURL: "https://test-app.used-for-testing",
+			ProjectWebsite:      "https://test-app.used-for-testing",
+			Outdated:            false,
+			Alerts:              nil,
+		}
+		json.NewEncoder(w).Encode(response)
+	}))
+	checkPointURL, _ := url.Parse(srv.URL)
+	os.Setenv("CHECKPOINT_SCHEME", checkPointURL.Scheme)
+	os.Setenv("CHECKPOINT_HOST", checkPointURL.Host)
+}
+
+func teardown() {
+	srv.Close()
+}
 
 func TestCheck(t *testing.T) {
 	expected := &CheckResponse{

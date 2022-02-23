@@ -10,5 +10,5 @@ jobs:
       with:
         submodules: true
     - run: make RM= lint
-    - run: make
-    - run: make test
+    - run: make RM=
+    - run: make RM= test

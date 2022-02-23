@@ -14,7 +14,7 @@ $(BUILD_UPTODATE): backend/*
 ifeq ($(BUILD_IN_CONTAINER),true)
 
 build test lint: $(BUILD_UPTODATE)
-	$(SUDO) docker run $(RM) -ti \
+	$(SUDO) docker run $(RM) \
 		-v $(shell pwd):/go/src/github.com/weaveworks/go-checkpoint \
 		-e GOARCH -e GOOS -e BUILD_IN_CONTAINER=false \
 		$(BUILD_IMAGE) $@
@@ -30,7 +30,7 @@ test:
 	go test
 
 lint:
-	./tools/lint -notestpackage .
-	
-endif
+	go fmt
+	go vet
 
+endif

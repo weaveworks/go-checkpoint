@@ -1,6 +1,6 @@
 # Go Checkpoint Client
 
-[![Circle CI](https://circleci.com/gh/weaveworks/go-checkpoint/tree/master.svg?style=shield)](https://circleci.com/gh/weaveworks/go-checkpoint/tree/master)
+![Test status](https://github.com/weaveworks/go-checkpoint/actions/workflows/ci.yml/badge.svg)
 
 Checkpoint is an internal service at
 [Weaveworks](https://www.weave.works/) to check version information,

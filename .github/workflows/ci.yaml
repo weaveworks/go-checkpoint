@@ -1,0 +1,14 @@
+on:
+  push:
+
+name: Commit check
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - run: make RM= lint
+    - run: make RM=
+    - run: make RM= test

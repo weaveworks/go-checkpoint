@@ -166,8 +166,8 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 		}
 	}
 
-	u.Scheme = "https"
-	u.Host = "checkpoint-api.weave.works"
+	u.Scheme = os.Getenv("CHECKPOINT_SCHEME")
+	u.Host = os.Getenv("CHECKPOINT_HOST")
 	u.Path = fmt.Sprintf("/v1/check/%s", p.Product)
 	u.RawQuery = v.Encode()
 
